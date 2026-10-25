@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 
-from pricing import calculate_order, parse_items
+from pricing import calculate_order, parse_items, line_total
 
 app = Flask(__name__)
 
@@ -21,6 +21,11 @@ def index():
                 raise ValueError("Enter at least one order item.")
 
             result = calculate_order(items)
+
+            for item in items:
+                item["line_total"] = line_total(item)
+
+            result["items"] = items
 
         except (ValueError, ArithmeticError) as exc:
             error = str(exc)
