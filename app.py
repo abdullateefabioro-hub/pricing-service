@@ -29,7 +29,7 @@ def index():
         "index.html",
         result=result,
         error=error,
-        order_text=order_text,
+        items_text=order_text,
     )
 
 

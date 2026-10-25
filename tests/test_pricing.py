@@ -107,3 +107,31 @@ def test_parse_invalid_line_is_rejected():
 
     with pytest.raises(ValueError):
         parse_items("Notebook, 4.50")
+def test_invalid_price_is_rejected():
+    import pytest
+
+    items = [{"name": "Notebook", "price": "abc", "qty": 2}]
+
+    with pytest.raises(ValueError, match="Price must be a valid number."):
+        calculate_order(items)
+
+
+def test_invalid_quantity_text_is_rejected():
+    import pytest
+
+    with pytest.raises(
+        ValueError,
+        match="Quantity must be a whole number.",
+    ):
+        parse_items("Notebook, 10.00, two")
+
+
+def test_empty_item_name_is_rejected():
+    import pytest
+
+    with pytest.raises(ValueError, match="Item name cannot be empty."):
+        parse_items(", 10.00, 2")
+
+
+def test_empty_order_text_returns_no_items():
+    assert parse_items("") == []

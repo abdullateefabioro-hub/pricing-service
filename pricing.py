@@ -1,4 +1,4 @@
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 CENT = Decimal("0.01")
 DISCOUNT_RATE = Decimal("0.10")
@@ -7,16 +7,27 @@ DISCOUNT_THRESHOLD = Decimal("100.00")
 
 def money(value):
     """Convert a value to a monetary amount rounded to cents."""
-    return Decimal(str(value)).quantize(CENT, rounding=ROUND_HALF_UP)
+    try:
+        amount = Decimal(str(value))
+        return amount.quantize(CENT, rounding=ROUND_HALF_UP)
+    except (InvalidOperation, ValueError, TypeError):
+        raise ValueError("Price must be a valid number.") from None
 
 
 def line_total(item):
     """Calculate the total price for one order line."""
     price = money(item["price"])
-    quantity = int(item["qty"])
 
-    if price < 0 or quantity <= 0:
-        raise ValueError("Price must be non-negative and quantity must be positive.")
+    try:
+        quantity = int(item["qty"])
+    except (ValueError, TypeError):
+        raise ValueError("Quantity must be a whole number.") from None
+
+    if price < 0:
+        raise ValueError("Price must be non-negative.")
+
+    if quantity <= 0:
+        raise ValueError("Quantity must be greater than zero.")
 
     return price * quantity
 
@@ -55,14 +66,24 @@ def parse_items(text):
         parts = [part.strip() for part in raw_line.split(",")]
 
         if len(parts) != 3:
-            raise ValueError("Each line must contain a name, price, and quantity.")
+            raise ValueError(
+                "Each line must contain a name, price, and quantity."
+            )
 
         name, price, quantity = parts
+
+        if not name:
+            raise ValueError("Item name cannot be empty.")
+
+        try:
+            quantity = int(quantity)
+        except (ValueError, TypeError):
+            raise ValueError("Quantity must be a whole number.") from None
 
         items.append({
             "name": name,
             "price": price,
-            "qty": int(quantity),
+            "qty": quantity,
         })
 
     return items
