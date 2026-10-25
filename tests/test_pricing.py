@@ -56,3 +56,30 @@ def test_discount_applied_above_threshold():
     result = calculate_order(items)
     assert result["discount"] == Decimal("12.00")
     assert result["total"] == Decimal("108.00")
+
+
+def test_negative_price_is_rejected():
+    items = [{"name": "Item", "price": "-5.00", "qty": 1}]
+
+    import pytest
+
+    with pytest.raises(ValueError):
+        calculate_order(items)
+
+
+def test_zero_quantity_is_rejected():
+    items = [{"name": "Item", "price": "5.00", "qty": 0}]
+
+    import pytest
+
+    with pytest.raises(ValueError):
+        calculate_order(items)
+
+
+def test_negative_quantity_is_rejected():
+    items = [{"name": "Item", "price": "5.00", "qty": -2}]
+
+    import pytest
+
+    with pytest.raises(ValueError):
+        calculate_order(items)
