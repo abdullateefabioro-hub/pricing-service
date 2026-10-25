@@ -6,10 +6,15 @@ DISCOUNT_THRESHOLD = Decimal("100.00")
 
 
 def money(value):
-    """Convert a value to a monetary amount rounded to cents."""
+    """Convert a value to a finite monetary amount rounded to cents."""
     try:
         amount = Decimal(str(value))
+
+        if not amount.is_finite():
+            raise ValueError("Price must be a valid number.")
+
         return amount.quantize(CENT, rounding=ROUND_HALF_UP)
+
     except (InvalidOperation, ValueError, TypeError):
         raise ValueError("Price must be a valid number.") from None
 
@@ -19,8 +24,17 @@ def line_total(item):
     price = money(item["price"])
 
     try:
-        quantity = int(item["qty"])
-    except (ValueError, TypeError):
+        quantity_decimal = Decimal(str(item["qty"]))
+
+        if (
+            not quantity_decimal.is_finite()
+            or quantity_decimal != quantity_decimal.to_integral_value()
+        ):
+            raise ValueError("Quantity must be a whole number.")
+
+        quantity = int(quantity_decimal)
+
+    except (InvalidOperation, ValueError, TypeError):
         raise ValueError("Quantity must be a whole number.") from None
 
     if price < 0:
