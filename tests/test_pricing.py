@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pricing import calculate_order, calculate_subtotal
+from pricing import calculate_order, calculate_subtotal, parse_items
 
 
 def test_subtotal_multiple_items():
@@ -83,3 +83,27 @@ def test_negative_quantity_is_rejected():
 
     with pytest.raises(ValueError):
         calculate_order(items)
+
+def test_parse_single_item():
+    items = parse_items("Notebook, 4.50, 2")
+
+    assert items == [
+        {"name": "Notebook", "price": "4.50", "qty": 2}
+    ]
+
+
+def test_parse_multiple_items():
+    text = "Notebook, 4.50, 2\nPen, 1.25, 3"
+
+    items = parse_items(text)
+
+    assert len(items) == 2
+    assert items[0]["name"] == "Notebook"
+    assert items[1]["name"] == "Pen"
+
+
+def test_parse_invalid_line_is_rejected():
+    import pytest
+
+    with pytest.raises(ValueError):
+        parse_items("Notebook, 4.50")
