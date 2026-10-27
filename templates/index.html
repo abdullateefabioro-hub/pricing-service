@@ -116,6 +116,12 @@
             <p class="error">{{ error }}</p>
         {% endif %}
 
+        {% with messages = get_flashed_messages() %}
+            {% for message in messages %}
+                <p class="error">{{ message }}</p>
+            {% endfor %}
+        {% endwith %}
+
         {% if result %}
             <section class="results">
                 <h2>Order summary</h2>
@@ -157,6 +163,10 @@
                         Total: ${{ "%.2f"|format(result.total) }}
                     </p>
                 </div>
+
+                <a href="{{ url_for('download_receipt') }}">
+                    <button type="button">Download Receipt</button>
+                </a>
             </section>
         {% endif %}
     </main>
