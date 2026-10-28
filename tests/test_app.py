@@ -111,3 +111,73 @@ def test_invalid_order_clears_previous_receipt():
 
     assert download_response.status_code == 302
     assert download_response.headers["Location"].endswith("/")
+
+
+def test_lookup_page_loads():
+    client = setup_test_app()
+    response = client.get("/lookup")
+
+    assert response.status_code == 200
+    assert b"Order Lookup" in response.data
+
+
+def test_lookup_shows_error_for_missing_order():
+    client = setup_test_app()
+    response = client.post(
+        "/lookup",
+        data={"order_number": "ORD-DOES-NOT-EXIST"},
+    )
+
+    assert response.status_code == 200
+    assert b"No order found" in response.data
+
+
+def test_lookup_rejects_empty_order_number():
+    client = setup_test_app()
+    response = client.post(
+        "/lookup",
+        data={"order_number": ""},
+    )
+
+    assert response.status_code == 200
+    assert b"Please enter an order number." in response.data
+
+
+def test_lookup_displays_saved_order():
+    from database import save_order
+
+    client = setup_test_app()
+
+    result = {
+        "items": [
+            {
+                "name": "Notebook",
+                "price": "10.00",
+                "qty": 2,
+                "line_total": "20.00",
+            },
+            {
+                "name": "Pen",
+                "price": "2.50",
+                "qty": 4,
+                "line_total": "10.00",
+            },
+        ],
+        "subtotal": "30.00",
+        "discount": "0.00",
+        "total": "30.00",
+    }
+
+    # Generate a unique order number to avoid database conflicts.
+    order_number = save_order(result)
+
+    response = client.post(
+        "/lookup",
+        data={"order_number": order_number},
+    )
+
+    assert response.status_code == 200
+    assert order_number.encode() in response.data
+    assert b"Notebook" in response.data
+    assert b"Pen" in response.data
+    assert b"30.00" in response.data
