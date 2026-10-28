@@ -1,17 +1,23 @@
 from datetime import datetime
 
 
-def generate_receipt(result):
+def generate_receipt(result, order_number=None):
     """Generate a readable text receipt for a completed order."""
     lines = [
         "========================================",
         "             ORDER RECEIPT",
         "========================================",
         f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+    ]
+
+    if order_number:
+        lines.append(f"Order Number: {order_number}")
+
+    lines.extend([
         "",
         "ITEMS",
         "----------------------------------------",
-    ]
+    ])
 
     for item in result["items"]:
         name = item["name"]

@@ -12,6 +12,7 @@ from flask import (
     flash,
 )
 
+from database import save_order
 from pricing import calculate_order, parse_items, line_total
 from receipt import generate_receipt
 
@@ -29,6 +30,7 @@ def index():
     result = None
     error = None
     order_text = ""
+    order_number = None
 
     if request.method == "POST":
         order_text = request.form.get("items", "")
@@ -46,6 +48,10 @@ def index():
 
             result["items"] = items
 
+            # Save the validated order permanently.
+            order_number = save_order(result)
+
+            # Keep order details available for the downloadable receipt.
             session["receipt_items"] = [
                 {
                     "name": item["name"],
@@ -54,24 +60,28 @@ def index():
                 }
                 for item in items
             ]
+            session["order_number"] = order_number
 
         except (ValueError, ArithmeticError) as exc:
             error = str(exc)
             session.pop("receipt_items", None)
+            session.pop("order_number", None)
 
     return render_template(
         "index.html",
         result=result,
         error=error,
         items_text=order_text,
+        order_number=order_number,
     )
 
 
 @app.route("/download-receipt")
 def download_receipt():
     saved_items = session.get("receipt_items")
+    order_number = session.get("order_number")
 
-    if not saved_items:
+    if not saved_items or not order_number:
         flash("Please calculate an order before downloading a receipt.")
         return redirect(url_for("index"))
 
@@ -89,10 +99,14 @@ def download_receipt():
             item["line_total"] = line_total(item)
 
         result["items"] = items
-        receipt_text = generate_receipt(result)
+        receipt_text = generate_receipt(
+            result,
+            order_number=order_number,
+        )
 
     except (ValueError, ArithmeticError):
         session.pop("receipt_items", None)
+        session.pop("order_number", None)
         flash("Unable to generate the receipt. Please calculate your order again.")
         return redirect(url_for("index"))
 

@@ -124,6 +124,10 @@
 
         {% if result %}
             <section class="results">
+                {% if order_number %}
+                    <p><strong>Order number:</strong> {{ order_number }}</p>
+                {% endif %}
+
                 <h2>Order summary</h2>
 
                 <table>
