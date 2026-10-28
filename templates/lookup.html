@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Lookup - Pricing Service</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 850px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #222;
+            background: #f5f7fa;
+        }
+
+        main {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        input, button {
+            font-size: 16px;
+            padding: 10px;
+            margin-top: 8px;
+        }
+
+        input {
+            width: 100%;
+            max-width: 420px;
+            box-sizing: border-box;
+        }
+
+        button {
+            cursor: pointer;
+        }
+
+        .error {
+            color: #b00020;
+            margin-top: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #f0f2f5;
+        }
+
+        .totals {
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 24px;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <h1>Order Lookup</h1>
+        <p>Enter an order number to retrieve a saved order.</p>
+
+        <form method="POST" action="{{ url_for('lookup') }}">
+            <label for="order_number">Order number</label><br>
+            <input
+                type="text"
+                id="order_number"
+                name="order_number"
+                value="{{ order_number }}"
+                placeholder="e.g. ORD-20261028-AB12CD34"
+                required
+            >
+            <br>
+            <button type="submit">Find Order</button>
+        </form>
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        {% if order %}
+            <section>
+                <h2>Order Details</h2>
+
+                <p>
+                    <strong>Order number:</strong>
+                    {{ order.order_number }}
+                </p>
+
+                <p>
+                    <strong>Created:</strong>
+                    {{ order.created_at }}
+                </p>
+
+                <h3>Items</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Unit Price</th>
+                            <th>Quantity</th>
+                            <th>Line Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order["items"] %}
+                            <tr>
+                                <td>{{ item.name }}</td>
+                                <td>${{ "%.2f"|format(item.price|float) }}</td>
+                                <td>{{ item.qty }}</td>
+                                <td>${{ "%.2f"|format(item.line_total|float) }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <div class="totals">
+                    <p>
+                        <strong>Subtotal:</strong>
+                        ${{ "%.2f"|format(order.subtotal|float) }}
+                    </p>
+                    <p>
+                        <strong>Discount:</strong>
+                        ${{ "%.2f"|format(order.discount|float) }}
+                    </p>
+                    <p>
+                        <strong>Total:</strong>
+                        ${{ "%.2f"|format(order.total|float) }}
+                    </p>
+                </div>
+            </section>
+        {% endif %}
+
+        <a href="{{ url_for('index') }}">Back to Pricing Service</a>
+    </main>
+</body>
+</html>

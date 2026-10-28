@@ -12,7 +12,7 @@ from flask import (
     flash,
 )
 
-from database import save_order
+from database import get_order, save_order
 from pricing import calculate_order, parse_items, line_total
 from receipt import generate_receipt
 
@@ -123,3 +123,28 @@ def download_receipt():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
+@app.route("/lookup", methods=["GET", "POST"])
+def lookup():
+    order = None
+    error = None
+    order_number = ""
+
+    if request.method == "POST":
+        order_number = request.form.get("order_number", "").strip()
+
+        if not order_number:
+            error = "Please enter an order number."
+        else:
+            order = get_order(order_number)
+
+            if order is None:
+                error = f"No order found with number: {order_number}"
+
+    return render_template(
+        "lookup.html",
+        order=order,
+        error=error,
+        order_number=order_number,
+    )
